@@ -5,6 +5,8 @@
 #include <map>
 #include <array>
 #include <intrin.h>
+#include <Windows.h>
+#include <vector>
 
 
 struct Pattern
@@ -12,6 +14,47 @@ struct Pattern
     uint64_t hi;
     uint64_t lo;
 };
+
+struct BITMAPINFO_1BPP
+{
+    BITMAPINFOHEADER bmiHeader;
+    RGBQUAD          bmiColors[2];
+};
+
+ // stride - total row length in memory including garbage
+inline uint8_t GetByteRow(const uint8_t* buffer, int stride, int startX, int y)
+{
+    int byteIndex = (y * stride) + (startX / 8);
+    int bitOffset = startX % 8;
+
+    if (bitOffset == 0)
+    {
+        return buffer[byteIndex];
+    }
+
+    // PIn case pixel data is storred across 2 different bytes
+    return (buffer[byteIndex] << bitOffset) |
+        (buffer[byteIndex + 1] >> (8 - bitOffset));
+}
+
+Pattern ExtractPattern(const uint8_t* buffer, int stride, int startX, int startY)
+{
+    Pattern p = { 0, 0 };
+
+    for (int r = 0; r < 8; ++r)
+    {
+        uint8_t rowByte = GetByteRow(buffer, stride, startX, startY + r);
+        p.hi = (p.hi << 8) | rowByte;
+    }
+
+    for (int r = 0; r < 8; ++r)
+    {
+        uint8_t rowByte = GetByteRow(buffer, stride, startX, startY + 8 + r);
+        p.lo = (p.lo << 8) | rowByte;
+    }
+
+    return p;
+}
 
 
 auto pack8 = [](const auto& array, size_t offset) -> uint64_t {
@@ -29,6 +72,7 @@ auto getHammingDistance = [](const Pattern& p1, const Pattern& p2) -> int {
 
 int main()
 {
+    // ---------------------------------- Loading patterns ---------------------------------- 
     std::map<wchar_t, std::array<int, 16>> DirtyPatterns =  { 
         { L' ', {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00} },
         { L'!', {0x00, 0x00, 0x18, 0x3c, 0x3c, 0x3c, 0x18, 0x18, 0x18, 0x00, 0x18, 0x18, 0x00, 0x00, 0x00, 0x00} },
@@ -141,15 +185,67 @@ int main()
     
     std::cout << CleanPatterns[L'#'].hi << std::endl;
     std::cout << getHammingDistance(Pattern{0xe0, 0x01}, Pattern{ 0xf0, 0x00 }) << std::endl;
+
+
+
+
+
+    // ---------------------------------- Loading image ---------------------------------- 
+
+
+    HBITMAP hMonoBmp = (HBITMAP)LoadImage(
+        NULL,
+        L"Input.bmp",
+        IMAGE_BITMAP,
+        0, 0, 
+        LR_LOADFROMFILE | LR_MONOCHROME
+    );
+
+    if (!hMonoBmp) {
+        std::cerr << "Failed to load image as monochrome." << std::endl;
+        return 1;
+    }
+
+    std::cout << "Monochrome bitmap loaded successfully!" << std::endl;
+    
+
+
+    std::vector<Pattern> chunks;
+    BITMAP bm;
+    GetObject(hMonoBmp, sizeof(BITMAP), &bm);
+    int width = bm.bmWidth;
+    int height = bm.bmHeight;
+    int stride = ((width + 31) / 32) * 4;
+
+
+    BITMAPINFO_1BPP bmi1bpp = {};
+    bmi1bpp.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi1bpp.bmiHeader.biWidth = width;
+    bmi1bpp.bmiHeader.biHeight = -height; // Negative for top-down layout
+    bmi1bpp.bmiHeader.biPlanes = 1;
+    bmi1bpp.bmiHeader.biBitCount = 1;
+    bmi1bpp.bmiHeader.biCompression = BI_RGB;
+
+    // Cast to BITMAPINFO* when passing to GetDIBits
+    BITMAPINFO* bmi = reinterpret_cast<BITMAPINFO*>(&bmi1bpp);
+
+    std::vector<uint8_t> buffer(stride* height);
+    HDC hdc = GetDC(NULL);
+
+    if (GetDIBits(hdc, hMonoBmp, 0, height, buffer.data(), bmi, DIB_RGB_COLORS))
+    {
+        for (int y = 0; y + 16 <= height; y += 16)
+        {
+            for (int x = 0; x + 8 <= width; x += 8)
+            {
+                chunks.push_back(ExtractPattern(buffer.data(), stride, x, y));
+            }
+        }
+    }
+
+    int i = 0;
+
+    ReleaseDC(NULL, hdc);
+    DeleteObject(hMonoBmp);
+    return 0;
 }
-
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
-
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
