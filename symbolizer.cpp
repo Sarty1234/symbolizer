@@ -243,7 +243,41 @@ int main()
         }
     }
 
-    int i = 0;
+
+
+
+
+    // ---------------------------------- Symbolize ---------------------------------- 
+    const int MaxHammingDistanceToAcceptPattern = 0;
+    
+    int newLineCounter = 0;
+    for (int i = 0; i < chunks.size(); i++) {
+        Pattern& original = chunks[i];
+
+        wchar_t bestPattern = L' ';
+        int currentBestDistance = 8 * 16;
+        for (const auto &item : CleanPatterns) {
+            int currentDistance = getHammingDistance(original, item.second);
+
+            if (currentDistance <= MaxHammingDistanceToAcceptPattern) 
+            {
+                bestPattern = item.first;
+                break;
+            }
+
+            if (currentDistance < currentBestDistance) {
+                currentBestDistance = currentDistance;
+                bestPattern = item.first;
+            }
+        }
+
+        std::wcout << bestPattern;
+        if (newLineCounter >= stride - 1) {
+            std::wcout << std::endl;
+            newLineCounter = -1;
+        }
+        newLineCounter++;
+    }
 
     ReleaseDC(NULL, hdc);
     DeleteObject(hMonoBmp);
