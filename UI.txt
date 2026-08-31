@@ -1,0 +1,19 @@
+
+|---------------------------------------------------|
+|                                                   |
+|                     SYMBOLIZER                    |
+|                                                   |
+|---------------------------------------------------|
+|                                                   |
+|                        Rules                      |
+|                                                   |
+|     1) Image must be .bmp                         |
+|     2) Width must divide on 8                     |
+|     3) Height must divide on 16                   |
+|     4) It is recomended for the image to be       |
+|        fully white and black                      |
+|     5) To use app on custom image call            |
+|        symbolizer.exe [your\app\image.txt]        |
+|                                                   |
+|                                                   |
+|---------------------------------------------------|

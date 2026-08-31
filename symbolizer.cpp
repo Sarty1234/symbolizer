@@ -7,6 +7,7 @@
 #include <intrin.h>
 #include <Windows.h>
 #include <vector>
+#include <string>
 
 
 struct Pattern
@@ -70,8 +71,44 @@ auto getHammingDistance = [](const Pattern& p1, const Pattern& p2) -> int {
 };
 
 
-int main()
+int main(int argc, char* argv[])
 {
+    std::cout << std::endl;
+    std::cout << std::endl;
+    std::cout << std::endl;
+    std::cout << "_____________________________________________________" << std::endl;
+    std::cout << "|                                                   |" << std::endl;
+    std::cout << "|                                                   |" << std::endl;
+    std::cout << "|                     SYMBOLIZER                    |" << std::endl;
+    std::cout << "|                                                   |" << std::endl;
+    std::cout << "|---------------------------------------------------|" << std::endl;
+    std::cout << "|                                                   |" << std::endl;
+    std::cout << "|                        Rules                      |" << std::endl;
+    std::cout << "|                                                   |" << std::endl;
+    std::cout << "|     1) Image must be .bmp                         |" << std::endl;
+    std::cout << "|     2) Width must divide on 8                     |" << std::endl;
+    std::cout << "|     3) Height must divide on 16                   |" << std::endl;
+    std::cout << "|     4) It is recomended for the image to be       |" << std::endl;
+    std::cout << "|        fully white and black                      |" << std::endl;
+    std::cout << "|     5) To use app on custom image call            |" << std::endl;
+    std::cout << "|        symbolizer.exe [your\\app\\image.txt]        |" << std::endl;
+    std::cout << "|                                                   |" << std::endl;
+    std::cout << "|                                                   |" << std::endl;
+    std::cout << "|___________________________________________________|" << std::endl;
+    std::cout << std::endl;
+    std::cout << std::endl;
+    std::cout << std::endl;
+
+
+
+
+
+
+
+    std::cout << "Using image \"Input.bmp\" in app local folder" << std::endl;
+    
+
+
     // ---------------------------------- Loading patterns ---------------------------------- 
     std::map<wchar_t, std::array<int, 16>> DirtyPatterns =  { 
         { L' ', {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00} },
@@ -182,9 +219,6 @@ int main()
             }
         );
     }
-    
-    std::cout << CleanPatterns[L'#'].hi << std::endl;
-    std::cout << getHammingDistance(Pattern{0xe0, 0x01}, Pattern{ 0xf0, 0x00 }) << std::endl;
 
 
 
@@ -207,6 +241,9 @@ int main()
     }
 
     std::cout << "Monochrome bitmap loaded successfully!" << std::endl;
+    std::cout << std::endl;
+    std::cout << std::endl;
+    std::cout << std::endl;
     
 
 
@@ -281,5 +318,12 @@ int main()
 
     ReleaseDC(NULL, hdc);
     DeleteObject(hMonoBmp);
+
+
+    std::cout << std::endl;
+    std::cout << std::endl;
+    std::cout << std::endl;
+    std::cout << "Press enter to continue..." << std::endl;
+    getchar();
     return 0;
 }
